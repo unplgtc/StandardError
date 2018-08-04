@@ -1,16 +1,56 @@
 'use strict';
 
 const StandardError = {
+	keys: [],
+
+	list(domain) {
+		var list = {};
+		this.keys.map(key => this[key] && (!domain || this[key].domain == domain) ? list[key] = this[key] : null);
+		return list;
+	},
+
+	listKeys(domain) {
+		return this.keys.map(key => this[key] && (!domain || this[key].domain == domain) ? key : null)
+		                .filter(key => key);
+	},
+
+	listErrors(domain) {
+		return this.keys.map(key => this[key] && (!domain || this[key].domain == domain) ? this[key] : null)
+		                .filter(key => key);
+	},
+
+	register(key) {
+		this.keys.push(key);
+	},
+
+	registerAll(keys) {
+		for (var key of keys) {
+			this.register(key);
+		}
+	},
+
+	deregister(key) {
+		if (this[key]) {
+			this[key] = undefined;
+			this.keys = this.keys.filter(_key => _key != key);
+		}
+	},
+
+	deregisterAll(domain) {
+		this.listKeys(domain).map(key => this.deregister(key));
+	},
+
 	// Map new error codes into the StandardError Object
 	expand(errors) {
 		var verification = {
 			passed: true
-		}
+		};
 		for (var key of Object.keys(errors)) {
 			verification[key] = this.verify(key, errors[key]);
 			if (verification[key].passed) {
-				delete verification[key];
+				this.register(key);
 				this[key] = errors[key];
+				delete verification[key];
 			} else {
 				verification.passed = false;
 			}
@@ -32,7 +72,7 @@ const StandardError = {
 			...(error.domain ? null : {domain: 'Missing Domain'}),
 			...(error.title ? null : {title: 'Missing Title'}),
 			...(error.message ? null : {message: 'Missing Message'})
-		}
+		};
 	}
 }
 
@@ -50,8 +90,10 @@ const HttpErrors = {
 	500: {code: 500, domain: 'generic', title: 'Internal Error', message: 'Unexpected condition was encounterd'}
 }
 
+// Register default error keys
+StandardError.registerAll(Object.keys(HttpErrors));
+
 // Delegate from StandardError to HttpErrors
 Object.setPrototypeOf(StandardError, HttpErrors);
 
-module.exports = StandardError
-
+module.exports = StandardError;
