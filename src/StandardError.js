@@ -1,8 +1,6 @@
 'use strict';
 
 const StandardError = {
-	keys: [],
-
 	list(domain) {
 		var list = {};
 		this.keys.map(key => this[key] && (!domain || this[key].domain == domain) ? list[key] = this[key] : null);
@@ -17,6 +15,62 @@ const StandardError = {
 	listErrors(domain) {
 		return this.keys.map(key => this[key] && (!domain || this[key].domain == domain) ? this[key] : null)
 		                .filter(key => key);
+	},
+
+	// Map new errors into the StandardError Object
+	add(errors) {
+		if (!Array.isArray(errors)) {
+			errors = [errors];
+		}
+		return this.expand(errors);
+	},
+
+	// Remove errors from the StandardError Object
+	remove(keys) {
+		if (typeof keys == 'number') {
+			keys = [keys];
+		}
+		this.deregisterAll(keys);
+	},
+
+	removeByDomain(domain) {
+		this.deregisterByDomain(domain);
+	}
+}
+
+const Internal = {
+	keys: [],
+
+	// Codes that don't pass verification are rejected
+	verify(error) {
+		return {
+			passed: error.code != undefined && !!error.domain && !!error.title && !!error.message && !this[error.code],
+			...(error.code != undefined
+			    ? !this[error.code]
+			      ? null
+			      : {code: 'Code already in use'}
+			    : {code: 'Missing Code'}),
+			...(error.domain ? null : {domain: 'Missing Domain'}),
+			...(error.title ? null : {title: 'Missing Title'}),
+			...(error.message ? null : {message: 'Missing Message'})
+		};
+	},
+
+	expand(errors) {
+		var verification = {
+			passed: true
+		};
+		for (var error of errors) {
+			verification[error.code] = this.verify(error);
+			if (verification[error.code].passed) {
+				this.register(error.code.toString());
+				this[error.code] = error;
+				delete verification[error.code];
+			} else {
+				verification.passed = false;
+			}
+		}
+		return verification;
 	},
 
 	register(key) {
@@ -36,43 +90,12 @@ const StandardError = {
 		}
 	},
 
-	deregisterAll(domain) {
-		this.listKeys(domain).map(key => this.deregister(key));
+	deregisterAll(keys) {
+		keys.map(key => this.deregister(key));
 	},
 
-	// Map new error codes into the StandardError Object
-	expand(errors) {
-		var verification = {
-			passed: true
-		};
-		for (var key of Object.keys(errors)) {
-			verification[key] = this.verify(key, errors[key]);
-			if (verification[key].passed) {
-				this.register(key);
-				this[key] = errors[key];
-				delete verification[key];
-			} else {
-				verification.passed = false;
-			}
-		}
-		return verification;
-	},
-
-	// Codes that don't pass verification are rejected
-	verify(key, error) {
-		return {
-			passed: error.code != undefined && key == error.code && !!error.domain && !!error.title && !!error.message && !this[error.code],
-			...(error.code != undefined
-			    ? !this[error.code]
-			      ? key == error.code
-			        ? null
-			        : {code: 'Code does not match key'}
-			      : {code: 'Code already in use'}
-			    : {code: 'Missing Code'}),
-			...(error.domain ? null : {domain: 'Missing Domain'}),
-			...(error.title ? null : {title: 'Missing Title'}),
-			...(error.message ? null : {message: 'Missing Message'})
-		};
+	deregisterByDomain(domain) {
+		this.deregisterAll(this.listKeys(domain));
 	}
 }
 
@@ -90,10 +113,11 @@ const HttpErrors = {
 	500: {code: 500, domain: 'generic', title: 'Internal Error', message: 'Unexpected condition was encounterd'}
 }
 
-// Register default error keys
-StandardError.registerAll(Object.keys(HttpErrors));
+// Register default error keys internally
+Internal.registerAll(Object.keys(HttpErrors));
 
-// Delegate from StandardError to HttpErrors
-Object.setPrototypeOf(StandardError, HttpErrors);
+// Delegate StandardError -> Internal -> HttpErrors
+Object.setPrototypeOf(StandardError, Internal);
+Object.setPrototypeOf(Internal, HttpErrors);
 
 module.exports = StandardError;
