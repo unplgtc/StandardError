@@ -1,23 +1,35 @@
 'use strict';
 
+const HttpCodes = require('./HttpCodes.js');
+
 const StandardError = {
-	list(domain) {
-		var list = {};
-		this.keys.map(key => this[key] && (!domain || this[key].domain == domain) ? list[key] = this[key] : null);
-		return list;
+	// Output the StandardError Object, optionally filtered down to a particular domain
+	show(domain) {
+		var map = {};
+		this.keys.map(key => this[key] &&
+			                 (!domain || this[key].domain == domain)
+			                  ? map[key] = this[key]
+			                  : null);
+		return map;
 	},
 
 	listKeys(domain) {
-		return this.keys.map(key => this[key] && (!domain || this[key].domain == domain) ? key : null)
+		return this.keys.map(key => this[key] &&
+			                        (!domain || this[key].domain == domain)
+			                         ? key
+			                         : null)
 		                .filter(key => key);
 	},
 
 	listErrors(domain) {
-		return this.keys.map(key => this[key] && (!domain || this[key].domain == domain) ? this[key] : null)
+		return this.keys.map(key => this[key] &&
+			                        (!domain || this[key].domain == domain)
+			                         ? this[key]
+			                         : null)
 		                .filter(key => key);
 	},
 
-	// Map new errors into the StandardError Object
+	// Map new errors onto the StandardError Object
 	add(errors) {
 		if (!Array.isArray(errors)) {
 			errors = [errors];
@@ -27,7 +39,7 @@ const StandardError = {
 
 	// Remove errors from the StandardError Object
 	remove(keys) {
-		if (typeof keys == 'number') {
+		if (!Array.isArray(keys)) {
 			keys = [keys];
 		}
 		this.deregisterAll(keys);
@@ -40,21 +52,6 @@ const StandardError = {
 
 const Internal = {
 	keys: [],
-
-	// Codes that don't pass verification are rejected
-	verify(error) {
-		return {
-			passed: error.code != undefined && !!error.domain && !!error.title && !!error.message && !this[error.code],
-			...(error.code != undefined
-			    ? !this[error.code]
-			      ? null
-			      : {code: 'Code already in use'}
-			    : {code: 'Missing Code'}),
-			...(error.domain ? null : {domain: 'Missing Domain'}),
-			...(error.title ? null : {title: 'Missing Title'}),
-			...(error.message ? null : {message: 'Missing Message'})
-		};
-	},
 
 	expand(errors) {
 		var verification = {
@@ -71,6 +68,21 @@ const Internal = {
 			}
 		}
 		return verification;
+	},
+
+	// Codes that don't pass verification are rejected
+	verify(error) {
+		return {
+			passed: error.code != undefined && !!error.domain && !!error.title && !!error.message && !this[error.code],
+			...(error.code != undefined
+			    ? !this[error.code]
+			      ? null
+			      : {code: 'Code already in use'}
+			    : {code: 'Missing Code'}),
+			...(error.domain ? null : {domain: 'Missing Domain'}),
+			...(error.title ? null : {title: 'Missing Title'}),
+			...(error.message ? null : {message: 'Missing Message'})
+		};
 	},
 
 	register(key) {
@@ -99,25 +111,11 @@ const Internal = {
 	}
 }
 
-const HttpErrors = {
-	400: {code: 400, domain: 'generic', title: 'Bad Request', message: 'The server cannot or will not process the request'},
-
-	401: {code: 401, domain: 'generic', title: 'Unauthorized', message: 'Authentication required'},
-
-	403: {code: 403, domain: 'generic', title: 'Forbidden', message: 'Valid request, but the requested action is forbidden'},
-
-	404: {code: 404, domain: 'generic', title: 'Not Found', message: 'The requested resource could not be found'},
-
-	405: {code: 405, domain: 'generic', title: 'Method Not Allowed', message: 'The requested method is not supported for the requested resource'},
-
-	500: {code: 500, domain: 'generic', title: 'Internal Error', message: 'Unexpected condition was encounterd'}
-}
-
 // Register default error keys internally
-Internal.registerAll(Object.keys(HttpErrors));
+Internal.registerAll(Object.keys(HttpCodes));
 
-// Delegate StandardError -> Internal -> HttpErrors
+// Delegate StandardError -> Internal -> HttpCodes
 Object.setPrototypeOf(StandardError, Internal);
-Object.setPrototypeOf(Internal, HttpErrors);
+Object.setPrototypeOf(Internal, HttpCodes);
 
 module.exports = StandardError;
