@@ -1,4 +1,4 @@
 node_modules/
 **/.DS_Store
-.circleci/
 package-lock.json
+.circleci/
