@@ -14,12 +14,12 @@ const StandardError = require('./../src/StandardError');
  *         *
  * * * * * */
 
- test('Can list all errors as Object with codes as keys', async() => {
+ test('Can output all errors as Object with codes as keys', async() => {
 	// Execute
-	var list = StandardError.list();
+	var map = StandardError.show();
 
 	// Test
-	expect(list[500]).toEqual(StandardError[500]);
+	expect(map[500]).toEqual(StandardError[500]);
 });
 
 test('Can list all error keys', async() => {
@@ -30,7 +30,7 @@ test('Can list all error keys', async() => {
 	expect(list).toContain('500');
 });
 
-test('Can list all errors as list of Objects', async() => {
+test('Can list all error Objects', async() => {
 	// Execute
 	var list = StandardError.listErrors();
 
@@ -132,13 +132,13 @@ test('Can expand StandardError object with blob of multiple new errors with one 
 	expect(StandardError[803]).toEqual(data.filter(error => error.code == 803)[0]);
 });
 
-test('Can list all errors by domain as Object with codes as keys', async() => {
+test('Can output all errors by domain as Object with codes as keys', async() => {
 	// Execute
-	var list = StandardError.list('application');
+	var map = StandardError.show('application');
 
 	// Test
-	expect(list[500]).toEqual(undefined);
-	expect(list[600]).toEqual(StandardError[600]);
+	expect(map[500]).toEqual(undefined);
+	expect(map[600]).toEqual(StandardError[600]);
 });
 
 test('Can list all error keys by domain', async() => {
