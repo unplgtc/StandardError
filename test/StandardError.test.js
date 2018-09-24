@@ -19,7 +19,7 @@ test('Can output all errors as Object with codes as keys', async() => {
 	var map = StandardError.show();
 
 	// Test
-	expect(map[500]).toEqual(StandardError[500]);
+	expect(map[500]).toEqual(StandardError[5000]);
 });
 
 test('Can list all error keys', async() => {
