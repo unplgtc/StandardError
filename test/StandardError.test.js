@@ -14,7 +14,7 @@ const StandardError = require('./../src/StandardError');
  *         *
  * * * * * */
 
- test('Can output all errors as Object with codes as keys', async() => {
+test('Can output all errors as Object with codes as keys', async() => {
 	// Execute
 	var map = StandardError.show();
 
