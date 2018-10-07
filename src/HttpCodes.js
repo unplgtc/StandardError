@@ -33,7 +33,7 @@ const HttpCodes = {
 
 	429: {code: 429, domain: 'http', title: 'Too Many Request', message: 'Too many requests sent in a given amount of time'},
 
-	500: {code: 500, domain: 'http', title: 'Internal Error', message: 'Unexpected condition was encounterd'},
+	500: {code: 500, domain: 'http', title: 'Internal Error', message: 'Unexpected condition was encountered'},
 
 	501: {code: 501, domain: 'http', title: 'Not Implemented', message: 'Request method unsupported or unfulfillable'},
 
