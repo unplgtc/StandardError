@@ -17,11 +17,23 @@ Import StandardError into a service:
 const StandardError = require('@unplgtc/standard-error');
 ```
 
-Expand StandardError with custom errors:
+Expand StandardError with a custom error:
+
+```
+StandardError.add({
+	code: 'MyService_400',
+	domain: 'MyService',
+	title: 'Bad Request',
+	message: 'Conise yet descriptive message explaining what probably went wrong if this error was emitted'
+});
+```
+
+Expand StandardError with multiple custom errors at once:
 
 ```
 StandardError.add([
-	{code: 'MyService_400', domain: 'MyService', title: 'Bad Request', message: 'Conise yet descriptive message explaining what probably went wrong if this error was emitted'}
+	{code: 'MyOtherService_401', domain: 'MyOtherService', title: 'Unauthorized', message: 'Unauthorized request passed to MyOtherService'},
+	{code: 'MyOtherService_503', domain: 'MyOtherService', title: 'Service Unavailable', message: 'Attempted to contact upstream service but it was unavailable'}
 ]);
 ```
 
@@ -30,19 +42,19 @@ Return/throw/reject with StandardError objects during execution:
 ```
 // MyService.js
 
-function returnError(ohNo) {
+function returnOhNo(ohNo) {
 	if (ohNo) {
 		return StandardError.MyService_400;
 	}
 }
 
-function rejectWithError(ohNo) {
+function rejectOhNo(ohNo) {
 	if (ohNo) {
 		return Promise.reject(StandardError.MyService_400);
 	}
 }
 
-function throwError(ohNo) {
+function throwOhNo(ohNo) {
 	if (ohNo) {
 		throw new Error(StandardError.MyService_400);
 	}
@@ -56,7 +68,7 @@ const CBLogger = require('@unplgtc/cblogger');
 const StandardError = require('@unplgtc/standard-error');
 
 function logOhNos() {
-	var ohNo = returnError(true);
+	var ohNo = returnOhNo(true);
 	if (ohNo === StandardError.MyService_400) {
 		CBLogger.error('oh_no', {message: 'Another oh no occurred!'}, {stack: true}, StandardError.MyService_400);
 	}
@@ -80,4 +92,166 @@ ERROR: ** oh_no
     at Module.load (module.js:556:32)
     at tryModuleLoad (module.js:499:12)
     at Function.Module._load (module.js:491:3)
+```
+
+## Accessing and removing values on the StandardError object
+
+Show all errors:
+
+```
+StandardError.show();
+```
+
+Output:
+
+```
+{ '200': 
+   { code: 200,
+     domain: 'http',
+     title: 'OK',
+     message: 'Request successful' },
+  '201': 
+   { code: 201,
+     domain: 'http',
+     title: 'Created',
+     message: 'Request successful, resource created' },
+  '202': 
+   { code: 202,
+     domain: 'http',
+     title: 'Accepted',
+     message: 'The request has been accepted for processing' },
+  [...],
+  MyService_400: 
+   { code: 'MyService_400',
+     domain: 'MyService',
+     title: 'Bad Request',
+     message: 'Conise yet descriptive message explaining what probably went wrong if this error was emitted' },
+  MyOtherService_401: 
+   { code: 'MyOtherService_401',
+     domain: 'MyOtherService',
+     title: 'Unauthorized',
+     message: 'Unauthorized request passed to MyOtherService' },
+  MyOtherService_503: 
+   { code: 'MyOtherService_503',
+     domain: 'MyOtherService',
+     title: 'Service Unavailable',
+     message: 'Attempted to contact upstream service but it was unavailable' } }
+```
+
+Show all errors by domain:
+
+```
+StandardError.show('MyService');
+```
+
+Output:
+
+```
+{ MyService_400: 
+   { code: 'MyService_400',
+     domain: 'MyService',
+     title: 'Bad Request',
+     message: 'Conise yet descriptive message explaining what probably went wrong if this error was emitted' } }
+```
+
+List all error keys:
+
+```
+StandardError.listKeys();
+```
+
+Output:
+
+```
+[ '200',
+  '201',
+  '202',
+  [...],
+  'MyService_400',
+  'MyOtherService_401',
+  'MyOtherService_503' ]
+```
+
+List error keys by domain:
+
+```
+StandardError.listKeys('MyOtherService');
+```
+
+Output:
+
+```
+[ 'MyOtherService_401',
+  'MyOtherService_503' ]
+```
+
+List all error objects:
+
+```
+StandardError.listErrors();
+```
+
+Output
+
+```
+[ { code: 200,
+    domain: 'http',
+    title: 'OK',
+    message: 'Request successful' },
+  { code: 201,
+    domain: 'http',
+    title: 'Created',
+    message: 'Request successful, resource created' },
+  { code: 202,
+    domain: 'http',
+    title: 'Accepted',
+    message: 'The request has been accepted for processing' },
+  [...],
+  { code: 'MyService_400',
+    domain: 'MyService',
+    title: 'Bad Request',
+    message: 'Conise yet descriptive message explaining what probably went wrong if this error was emitted' },
+  { code: 'MyOtherService_401',
+    domain: 'MyOtherService',
+    title: 'Unauthorized',
+    message: 'Unauthorized request passed to MyOtherService' },
+  { code: 'MyOtherService_503',
+    domain: 'MyOtherService',
+    title: 'Service Unavailable',
+    message: 'Attempted to contact upstream service but it was unavailable' } ]
+```
+
+List error objects by domain:
+
+```
+StandardError.listErrors('MyOtherService');
+```
+
+Output:
+
+```
+[ { code: 'MyOtherService_401',
+    domain: 'MyOtherService',
+    title: 'Unauthorized',
+    message: 'Unauthorized request passed to MyOtherService' },
+  { code: 'MyOtherService_503',
+    domain: 'MyOtherService',
+    title: 'Service Unavailable',
+    message: 'Attempted to contact upstream service but it was unavailable' } ]
+```
+
+Remove errors from StandardError object:
+
+```
+// Remove single error
+StandardError.remove('MyService_400');
+
+// Remove list of errors
+StandardError.remove(['MyOtherService_401', 'MyOtherService_503']);
+```
+
+Remove full domain of errors from StandardError object:
+
+```
+StandardError.removeByDomain('http');
 ```
