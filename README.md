@@ -1,4 +1,5 @@
-[![CircleCI](https://circleci.com/gh/unplgtc/StandardError.svg?style=svg)](https://circleci.com/gh/unplgtc/StandardError)
+[![CircleCI master build status](https://img.shields.io/circleci/project/github/unplgtc/StandardError/master.svg?label=master&logo=circleci)](https://circleci.com/gh/unplgtc/StandardError/tree/master)
+[![npm version](https://img.shields.io/npm/v/@unplgtc/standard-error.svg)](https://www.npmjs.com/package/@unplgtc/standard-error)
 
 # StandardError
 
