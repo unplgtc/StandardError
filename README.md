@@ -13,13 +13,13 @@ StandardError comes equipped with a generic set of common HTTP errors, but can e
 
 Import StandardError into a service:
 
-```
+```js
 const StandardError = require('@unplgtc/standard-error');
 ```
 
 Expand StandardError with a custom error:
 
-```
+```js
 StandardError.add({
 	code: 'MyService_400',
 	domain: 'MyService',
@@ -30,7 +30,7 @@ StandardError.add({
 
 Expand StandardError with multiple custom errors at once:
 
-```
+```js
 StandardError.add([
 	{code: 'MyOtherService_401', domain: 'MyOtherService', title: 'Unauthorized', message: 'Unauthorized request passed to MyOtherService'},
 	{code: 'MyOtherService_503', domain: 'MyOtherService', title: 'Service Unavailable', message: 'Attempted to contact upstream service but it was unavailable'}
@@ -39,7 +39,7 @@ StandardError.add([
 
 Return/throw/reject with StandardError objects during execution:
 
-```
+```js
 // MyService.js
 
 function returnOhNo(ohNo) {
@@ -63,7 +63,7 @@ function throwOhNo(ohNo) {
 
 StandardError works well with Unapologetic's [CBLogger package](https://github.com/unplgtc/cblogger) for improved error logging:
 
-```
+```js
 const CBLogger = require('@unplgtc/cblogger');
 const StandardError = require('@unplgtc/standard-error');
 
@@ -98,13 +98,13 @@ ERROR: ** oh_no
 
 Show all errors:
 
-```
+```js
 StandardError.show();
 ```
 
 Output:
 
-```
+```js
 { '200': 
    { code: 200,
      domain: 'http',
@@ -140,13 +140,13 @@ Output:
 
 Show all errors by domain:
 
-```
+```js
 StandardError.show('MyService');
 ```
 
 Output:
 
-```
+```js
 { MyService_400: 
    { code: 'MyService_400',
      domain: 'MyService',
@@ -156,13 +156,13 @@ Output:
 
 List all error keys:
 
-```
+```js
 StandardError.listKeys();
 ```
 
 Output:
 
-```
+```js
 [ '200',
   '201',
   '202',
@@ -174,26 +174,26 @@ Output:
 
 List error keys by domain:
 
-```
+```js
 StandardError.listKeys('MyOtherService');
 ```
 
 Output:
 
-```
+```js
 [ 'MyOtherService_401',
   'MyOtherService_503' ]
 ```
 
 List all error objects:
 
-```
+```js
 StandardError.listErrors();
 ```
 
 Output
 
-```
+```js
 [ { code: 200,
     domain: 'http',
     title: 'OK',
@@ -223,13 +223,13 @@ Output
 
 List error objects by domain:
 
-```
+```js
 StandardError.listErrors('MyOtherService');
 ```
 
 Output:
 
-```
+```js
 [ { code: 'MyOtherService_401',
     domain: 'MyOtherService',
     title: 'Unauthorized',
@@ -242,7 +242,7 @@ Output:
 
 Remove errors from StandardError object:
 
-```
+```js
 // Remove single error
 StandardError.remove('MyService_400');
 
@@ -252,6 +252,6 @@ StandardError.remove(['MyOtherService_401', 'MyOtherService_503']);
 
 Remove full domain of errors from StandardError object:
 
-```
+```js
 StandardError.removeByDomain('http');
 ```
