@@ -7,15 +7,15 @@ const StandardError = {
 	show(domain) {
 		var map = {};
 		this.keys.map(key => this[key] &&
-			                 (!domain || this[key].domain == domain)
-			                  ? map[key] = this[key]
+			                 (!domain || this[key]().domain == domain)
+			                  ? map[key] = this[key]()
 			                  : null);
 		return map;
 	},
 
 	listKeys(domain) {
 		return this.keys.map(key => this[key] &&
-			                        (!domain || this[key].domain == domain)
+			                        (!domain || this[key]().domain == domain)
 			                         ? key
 			                         : null)
 		                .filter(key => key);
@@ -23,8 +23,8 @@ const StandardError = {
 
 	listErrors(domain) {
 		return this.keys.map(key => this[key] &&
-			                        (!domain || this[key].domain == domain)
-			                         ? this[key]
+			                        (!domain || this[key]().domain == domain)
+			                         ? this[key]()
 			                         : null)
 		                .filter(key => key);
 	},
@@ -61,7 +61,7 @@ const Internal = {
 			verification[error.code] = this.verify(error);
 			if (verification[error.code].passed) {
 				this.register(error.code.toString());
-				this[error.code] = error;
+				this[error.code] = this.createError(error);
 				delete verification[error.code];
 			} else {
 				verification.passed = false;
@@ -82,6 +82,16 @@ const Internal = {
 			...(error.domain ? null : {domain: 'Missing Domain'}),
 			...(error.title ? null : {title: 'Missing Title'}),
 			...(error.message ? null : {message: 'Missing Message'})
+		};
+	},
+
+	createError(error) {
+		return (details) => {
+			if (details == null) {
+				return { ...error };
+			} else {
+				return { ...error, details: details };
+			}
 		};
 	},
 
@@ -111,11 +121,10 @@ const Internal = {
 	}
 }
 
-// Register default error keys internally
-Internal.registerAll(Object.keys(HttpCodes));
-
-// Delegate StandardError -> Internal -> HttpCodes
+// Delegate StandardError -> Internal
 Object.setPrototypeOf(StandardError, Internal);
-Object.setPrototypeOf(Internal, HttpCodes);
+
+// Register default error keys internally
+StandardError.add(HttpCodes);
 
 module.exports = StandardError;
