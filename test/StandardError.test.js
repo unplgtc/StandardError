@@ -19,7 +19,7 @@ test('Can output all errors as Object with codes as keys', async() => {
 	var map = StandardError.show();
 
 	// Test
-	expect(map[500]).toEqual(StandardError[500]);
+	expect(map['http_500']).toEqual(StandardError['http_500']());
 });
 
 test('Can list all error keys', async() => {
@@ -27,7 +27,7 @@ test('Can list all error keys', async() => {
 	var list = StandardError.listKeys();
 
 	// Test
-	expect(list).toContain('500');
+	expect(list).toContain('http_500');
 });
 
 test('Can list all error Objects', async() => {
@@ -35,7 +35,7 @@ test('Can list all error Objects', async() => {
 	var list = StandardError.listErrors();
 
 	// Test
-	expect(list).toContain(StandardError[500]);
+	expect(list).toContainEqual(StandardError['http_500']());
 });
 
 test.each`
@@ -75,7 +75,7 @@ test.each`
 test('Expanding StandardError object with blob of multiple new errors fails malformed errors individually', async() => {
 	// Setup
 	var data = [
-		{code: 500, domain: 'application', title: 'Test 1', message: '500 is already taken by the default StandardError object'},
+		{code: 'http_500', domain: 'application', title: 'Test 1', message: '500 is already taken by the default StandardError object'},
 		{code: 701, domain: undefined, title: 'Test 2', message: 'Error with undefined domain'},
 		{code: 702, domain: 'application', title: undefined, message: 'Error with undefined title'},
 		{code: 703, domain: 'application', title: 'Test 4', message: undefined},
@@ -89,9 +89,9 @@ test('Expanding StandardError object with blob of multiple new errors fails malf
 	expect(verification.passed).toEqual(false);
 
 	// Failed 500 and did not overwrite existing 500 error
-	expect(verification[500].passed).toEqual(false);
-	expect(verification[500].code).toEqual('Code already in use');
-	expect(StandardError[500]).not.toEqual(data.filter(error => error.code == 500)[0]);
+	expect(verification['http_500'].passed).toEqual(false);
+	expect(verification['http_500'].code).toEqual('Code already in use');
+	expect(StandardError['http_500']()).not.toEqual(data.filter(error => error.code == 'http_500')[0]);
 
 	// Failed 801 error
 	expect(verification[701].passed).toEqual(false);
@@ -109,7 +109,7 @@ test('Expanding StandardError object with blob of multiple new errors fails malf
 	expect(StandardError[703]).toEqual(undefined);
 
 	// Passed 804 error
-	expect(StandardError[704]).toEqual(data.filter(error => error.code == 704)[0]);
+	expect(StandardError[704]()).toEqual(data.filter(error => error.code == 704)[0]);
 });
 
 test('Can expand StandardError object with blob of multiple new errors with one call', async() => {
@@ -126,10 +126,10 @@ test('Can expand StandardError object with blob of multiple new errors with one 
 
 	// Test
 	expect(verification.passed).toEqual(true);
-	expect(StandardError[800]).toEqual(data.filter(error => error.code == 800)[0]);
-	expect(StandardError[801]).toEqual(data.filter(error => error.code == 801)[0]);
-	expect(StandardError[802]).toEqual(data.filter(error => error.code == 802)[0]);
-	expect(StandardError[803]).toEqual(data.filter(error => error.code == 803)[0]);
+	expect(StandardError[800]()).toEqual(data.filter(error => error.code == 800)[0]);
+	expect(StandardError[801]()).toEqual(data.filter(error => error.code == 801)[0]);
+	expect(StandardError[802]()).toEqual(data.filter(error => error.code == 802)[0]);
+	expect(StandardError[803]()).toEqual(data.filter(error => error.code == 803)[0]);
 });
 
 test('Can output all errors by domain as Object with codes as keys', async() => {
@@ -137,8 +137,8 @@ test('Can output all errors by domain as Object with codes as keys', async() => 
 	var map = StandardError.show('application');
 
 	// Test
-	expect(map[500]).toEqual(undefined);
-	expect(map[600]).toEqual(StandardError[600]);
+	expect(map['http_500']).toEqual(undefined);
+	expect(map[600]).toEqual(StandardError[600]());
 });
 
 test('Can list all error keys by domain', async() => {
@@ -146,7 +146,7 @@ test('Can list all error keys by domain', async() => {
 	var list = StandardError.listKeys('application');
 
 	// Test
-	expect(list).not.toContain('500');
+	expect(list).not.toContain('http_500');
 	expect(list).toContain('600');
 });
 
@@ -155,21 +155,21 @@ test('Can list all errors by domain as list of Objects', async() => {
 	var list = StandardError.listErrors('application');
 
 	// Test
-	expect(list).not.toContain(StandardError[500]);
-	expect(list).toContain(StandardError[600]);
+	expect(list).not.toContainEqual(StandardError['http_500']());
+	expect(list).toContainEqual(StandardError[600]());
 });
 
 test('Can remove errors by key from StandardError Object', async() => {
 	// Verify that 500 error exists
-	expect(StandardError[500]).not.toEqual(undefined);
-	expect(StandardError.listKeys()).toContain('500');
+	expect(StandardError['http_500']).not.toEqual(undefined);
+	expect(StandardError.listKeys()).toContain('http_500');
 
 	// Execute
-	StandardError.remove(500);
+	StandardError.remove('http_500');
 
 	// Test
-	expect(StandardError[500]).toEqual(undefined);
-	expect(StandardError.listKeys()).not.toContain('500');
+	expect(StandardError['http_500']).toEqual(undefined);
+	expect(StandardError.listKeys()).not.toContain('http_500');
 });
 
 test('Can remove errors by domain from StandardError Object', async() => {
@@ -183,4 +183,26 @@ test('Can remove errors by domain from StandardError Object', async() => {
 	// Test
 	expect(StandardError[600]).toEqual(undefined);
 	expect(StandardError.listKeys()).not.toContain('600');
+});
+
+test.each`
+	code          | details
+	${'http_502'} | ${'This error is not cool!'}
+	${'http_502'} | ${{requestingUser: 'myuser_name'}}
+	${'http_404'} | ${{query: 'name:bob tag:apple'}}
+	${'http_404'} | ${{query: 'liftoff',
+	                  time: 1517946300}}
+	${'http_501'} | ${{file: 'myFile.js',
+	                  line: 100,
+	                  errorData: 'Endpoint not implemented.'}}
+	${'http_404'} | ${12345}
+`('Can store extra details with each StandardError instance', ({code, details}) => {
+	// Execute
+	var myError = StandardError[code](details);
+
+	// Test
+	expect(myError).toHaveProperty('details');
+	expect(myError.details).toEqual(details);
+	expect(myError).toEqual({...StandardError[code](), details: details});
+	expect(myError.message).toEqual(StandardError[code]().message);
 });
