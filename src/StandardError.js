@@ -4,7 +4,7 @@ const HttpCodes = require('./HttpCodes.js');
 
 const StandardError = {
 	// Output the StandardError Object, optionally filtered down to a particular domain
-	show(domain) {
+	list(domain) {
 		var map = {};
 		this.keys.map(key => this[key] &&
 			                 (!domain || this[key]().domain == domain)
