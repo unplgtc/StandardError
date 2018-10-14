@@ -1,7 +1,7 @@
 {
   "name": "@unplgtc/standard-error",
-  "version": "0.1.0",
-  "description": "Expandable standardized error object for better logging and error handling in Node applications",
+  "version": "1.0.0",
+  "description": "Expandable standardized error object for improved logging and error handling in Node applications",
   "main": "src/StandardError.js",
   "scripts": {
     "test": "jest"
@@ -10,7 +10,7 @@
     "type": "git",
     "url": "git+https://github.com/unplgtc/StandardError.git"
   },
-  "author": "Alex Guyot",
+  "author": "Alex Guyot <guyot@unapologetic.io> (https://unapologetic.io)",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/unplgtc/StandardError/issues"
