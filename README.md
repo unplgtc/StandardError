@@ -3,7 +3,7 @@
 
 # StandardError
 
-### Expandable standardized error object for improved logging and error handling in Node applications.
+### Expandable standardized error object for improved logging and error handling in Node applications
 
 StandardError empowers services to explicitly define and register a set of their own domain-specific error objects. During execution services can then return, reject, or throw with these errors, resulting in an injection of clearly identifiable and traceable errors throughout your application.
 
