@@ -14,9 +14,9 @@ const StandardError = require('./../src/StandardError');
  *         *
  * * * * * */
 
-test('Can output all errors as Object with codes as keys', async() => {
+test('Can list all errors as Object with codes as keys', async() => {
 	// Execute
-	var map = StandardError.show();
+	var map = StandardError.list();
 
 	// Test
 	expect(map['http_500']).toEqual(StandardError['http_500']());
@@ -132,9 +132,9 @@ test('Can expand StandardError object with blob of multiple new errors with one 
 	expect(StandardError[803]()).toEqual(data.filter(error => error.code == 803)[0]);
 });
 
-test('Can output all errors by domain as Object with codes as keys', async() => {
+test('Can list all errors by domain as Object with codes as keys', async() => {
 	// Execute
-	var map = StandardError.show('application');
+	var map = StandardError.list('application');
 
 	// Test
 	expect(map['http_500']).toEqual(undefined);

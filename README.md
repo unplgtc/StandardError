@@ -9,6 +9,8 @@ StandardError empowers services to explicitly define and register a set of their
 
 StandardError comes equipped with a generic set of common HTTP errors, but can easily be expanded to support custom, domain-specific errors using its `add()` function. All custom errors are verified to fit the expected format and to check for conflicts before being allowed onto the StandardError object.
 
+All StandardError errors must be formatted as an Object with `code`, `domain`, `title`, and `message` parameters. Errors are added as functions onto the main StandardError instance, and each function supports being passed a single `details` argument. This argument can be used to provide extra context at runtime, such as a stacktrace.
+
 ## Usage
 
 Import StandardError into a service:
@@ -44,20 +46,42 @@ Return/throw/reject with StandardError objects during execution:
 
 function returnOhNo(ohNo) {
 	if (ohNo) {
-		return StandardError.MyService_400;
+		return StandardError.MyService_400();
 	}
 }
 
 function rejectOhNo(ohNo) {
 	if (ohNo) {
-		return Promise.reject(StandardError.MyService_400);
+		return Promise.reject(StandardError.MyService_400());
 	}
 }
 
 function throwOhNo(ohNo) {
 	if (ohNo) {
-		throw new Error(StandardError.MyService_400);
+		throw new Error(StandardError.MyService_400());
 	}
+}
+```
+
+Return a StandardError with runtime details:
+
+```js
+function returnOhNoWithStack(ohNo) {
+  if (ohNo) {
+    return StandardError.MyService_400({ohNo: ohNo});
+  }
+}
+```
+
+Output:
+
+```js
+{
+  code: 'MyService_400',
+  domain: 'MyService',
+  title: 'Bad Request',
+  message: 'Conise yet descriptive message explaining what probably went wrong if this error was emitted',
+  details: { ohNo: true }
 }
 ```
 
@@ -69,8 +93,8 @@ const StandardError = require('@unplgtc/standard-error');
 
 function logOhNos() {
 	var ohNo = returnOhNo(true);
-	if (ohNo === StandardError.MyService_400) {
-		CBLogger.error('oh_no', {message: 'Another oh no occurred!'}, {stack: true}, StandardError.MyService_400);
+	if (ohNo === StandardError.MyService_400()) {
+		CBLogger.error('oh_no', {message: 'Another oh no occurred!'}, {stack: true}, StandardError.MyService_400());
 	}
 }
 ```
@@ -96,26 +120,26 @@ ERROR: ** oh_no
 
 ## Accessing and removing values on the StandardError object
 
-Show all errors:
+List all errors:
 
 ```js
-StandardError.show();
+StandardError.list();
 ```
 
 Output:
 
 ```js
-{ '200': 
+{ 'http_200': 
    { code: 200,
      domain: 'http',
      title: 'OK',
      message: 'Request successful' },
-  '201': 
+  'http_201': 
    { code: 201,
      domain: 'http',
      title: 'Created',
      message: 'Request successful, resource created' },
-  '202': 
+  'http_202': 
    { code: 202,
      domain: 'http',
      title: 'Accepted',
@@ -138,10 +162,10 @@ Output:
      message: 'Attempted to contact upstream service but it was unavailable' } }
 ```
 
-Show all errors by domain:
+List all errors by domain:
 
 ```js
-StandardError.show('MyService');
+StandardError.list('MyService');
 ```
 
 Output:
@@ -154,6 +178,8 @@ Output:
      message: 'Conise yet descriptive message explaining what probably went wrong if this error was emitted' } }
 ```
 
+Note that the `.list()` output does actually return an Object rather than an array. If you're looking for arrays, use the `listKeys()` method for an array of keys or the `listErrors()` method for an array of error Objects.
+
 List all error keys:
 
 ```js
@@ -163,9 +189,9 @@ StandardError.listKeys();
 Output:
 
 ```js
-[ '200',
-  '201',
-  '202',
+[ 'http_200',
+  'http_201',
+  'http_202',
   [...],
   'MyService_400',
   'MyOtherService_401',
@@ -194,15 +220,15 @@ StandardError.listErrors();
 Output
 
 ```js
-[ { code: 200,
+[ { code: 'http_200',
     domain: 'http',
     title: 'OK',
     message: 'Request successful' },
-  { code: 201,
+  { code: 'http_201',
     domain: 'http',
     title: 'Created',
     message: 'Request successful, resource created' },
-  { code: 202,
+  { code: 'http_202',
     domain: 'http',
     title: 'Accepted',
     message: 'The request has been accepted for processing' },
