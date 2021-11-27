@@ -1,5 +1,3 @@
-'use strict';
-
 const HttpCodes = [
 	{code: 'http_200', domain: 'http', title: 'OK', message: 'Request successful'},
 
@@ -42,4 +40,4 @@ const HttpCodes = [
 	{code: 'http_503', domain: 'http', title: 'Service Unavailable', message: 'The server is currently unavailable'}
 ];
 
-module.exports = HttpCodes;
+export default HttpCodes;

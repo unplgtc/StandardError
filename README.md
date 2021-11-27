@@ -16,7 +16,7 @@ All StandardError errors must be formatted as an Object with `code`, `domain`, `
 Import StandardError into a service:
 
 ```js
-const StandardError = require('@unplgtc/standard-error');
+import StandardError from '@unplgtc/standard-error';
 ```
 
 Expand StandardError with a custom error:
@@ -88,8 +88,8 @@ Output:
 StandardError works well with Unapologetic's [CBLogger package](https://github.com/unplgtc/cblogger) for improved error logging:
 
 ```js
-const CBLogger = require('@unplgtc/cblogger');
-const StandardError = require('@unplgtc/standard-error');
+import CBLogger from '@unplgtc/cblogger';
+import StandardError from '@unplgtc/standard-error';
 
 function logOhNos() {
 	var ohNo = returnOhNo(true);
@@ -102,13 +102,13 @@ function logOhNos() {
 The above example would log something like the following:
 
 ```
-ERROR: ** oh_no 
-{ message: 'Another oh no occurred!' } 
+ERROR: ** oh_no
+{ message: 'Another oh no occurred!' }
 ** { code: 'MyService_400',
   domain: 'MyService',
   title: 'Bad Request',
-  message: 'Conise yet descriptive message explaining what probably went wrong if this error was emitted' } 
--> MyService.js L11 at 2018-10-08 03:50:35.417Z (1538970635417) 
+  message: 'Conise yet descriptive message explaining what probably went wrong if this error was emitted' }
+-> MyService.js L11 at 2018-10-08 03:50:35.417Z (1538970635417)
    at logOhNos (/Users/path/to/file/src/MyService.js:11:12)
     at Object.<anonymous> (/Users/path/to/file/src/MyService.js:21:1)
     at Module._compile (module.js:643:30)
@@ -129,33 +129,33 @@ StandardError.list();
 Output:
 
 ```js
-{ 'http_200': 
+{ 'http_200':
    { code: 200,
      domain: 'http',
      title: 'OK',
      message: 'Request successful' },
-  'http_201': 
+  'http_201':
    { code: 201,
      domain: 'http',
      title: 'Created',
      message: 'Request successful, resource created' },
-  'http_202': 
+  'http_202':
    { code: 202,
      domain: 'http',
      title: 'Accepted',
      message: 'The request has been accepted for processing' },
   [...],
-  MyService_400: 
+  MyService_400:
    { code: 'MyService_400',
      domain: 'MyService',
      title: 'Bad Request',
      message: 'Conise yet descriptive message explaining what probably went wrong if this error was emitted' },
-  MyOtherService_401: 
+  MyOtherService_401:
    { code: 'MyOtherService_401',
      domain: 'MyOtherService',
      title: 'Unauthorized',
      message: 'Unauthorized request passed to MyOtherService' },
-  MyOtherService_503: 
+  MyOtherService_503:
    { code: 'MyOtherService_503',
      domain: 'MyOtherService',
      title: 'Service Unavailable',
@@ -171,7 +171,7 @@ StandardError.list('MyService');
 Output:
 
 ```js
-{ MyService_400: 
+{ MyService_400:
    { code: 'MyService_400',
      domain: 'MyService',
      title: 'Bad Request',
