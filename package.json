@@ -1,6 +1,6 @@
 {
   "name": "@unplgtc/standard-error",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Expandable standardized error object for improved logging and error handling in Node applications",
   "type": "module",
   "exports": "./src/StandardError.js",
