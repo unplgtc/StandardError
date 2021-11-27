@@ -1,6 +1,4 @@
-'use strict';
-
-const HttpCodes = require('./HttpCodes.js');
+import HttpCodes from './HttpCodes.js';
 
 const StandardError = {
 	// Output the StandardError Object, optionally filtered down to a particular domain
@@ -127,4 +125,4 @@ Object.setPrototypeOf(StandardError, Internal);
 // Register default error keys internally
 StandardError.add(HttpCodes);
 
-module.exports = StandardError;
+export default StandardError;

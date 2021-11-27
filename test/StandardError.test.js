@@ -6,7 +6,8 @@
  *           *
  * * * * * * */
 
-const StandardError = require('./../src/StandardError');
+import StandardError from './../src/StandardError.js';
+import { jest } from '@jest/globals';
 
 /* * * * * *
  *         *
