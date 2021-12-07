@@ -3,281 +3,100 @@
 
 # StandardError
 
-### Expandable standardized error object for improved logging and error handling in Node applications
+### A simple package for easily extending the JavaScript Error class to provide custom Errors tailored to your project.
 
-StandardError empowers services to explicitly define and register a set of their own domain-specific error objects. During execution services can then return, reject, or throw with these errors, resulting in an injection of clearly identifiable and traceable errors throughout your application.
+StandardError enables the easy creation of custom Error objects which inherit from the JavaScript Error class itself. Throwing with StandardError Errors results in an injection of clearly identifiable and traceable errors throughout your application.
 
-StandardError comes equipped with a generic set of common HTTP errors, but can easily be expanded to support custom, domain-specific errors using its `add()` function. All custom errors are verified to fit the expected format and to check for conflicts before being allowed onto the StandardError object.
-
-All StandardError errors must be formatted as an Object with `code`, `domain`, `title`, and `message` parameters. Errors are added as functions onto the main StandardError instance, and each function supports being passed a single `details` argument. This argument can be used to provide extra context at runtime, such as a stacktrace.
+StandardError packages a generic `HttpError`, but can easily be expanded to support custom, domain-specific errors using its `createError()` function.
 
 ## Usage
-
-Import StandardError into a service:
-
-```js
-import StandardError from '@unplgtc/standard-error';
-```
 
 Expand StandardError with a custom error:
 
 ```js
-StandardError.add({
-	code: 'MyService_400',
-	domain: 'MyService',
-	title: 'Bad Request',
-	message: 'Conise yet descriptive message explaining what probably went wrong if this error was emitted'
+import { createError } from '@unplgtc/standard-error';
+
+createError({
+	name: 'HttpError',
+	message: 'Request failed with status code ``statusCode`` (``title``)',
+	properties: [ 'statusCode' ],
+	extraProps: {
+		statusCode: {
+			400: { title: 'Bad Request', details: 'The server cannot or will not process the request' },
+			500: { title: 'Internal Error', details: 'Unexpected condition was encountered' }
+		}
+	}
 });
 ```
+
+The `message` argument has a special feature. During instantiation, any property names (including matched properties from `extraProps`) that are surrounded by double back-ticks (such as `\`\`statusCode\`\`` and `\`\`title\`\`` above) will be replaced by their actual values for that error instance.
 
 Expand StandardError with multiple custom errors at once:
 
 ```js
-StandardError.add([
-	{code: 'MyOtherService_401', domain: 'MyOtherService', title: 'Unauthorized', message: 'Unauthorized request passed to MyOtherService'},
-	{code: 'MyOtherService_503', domain: 'MyOtherService', title: 'Service Unavailable', message: 'Attempted to contact upstream service but it was unavailable'}
+import { createErrors } from '@unplgtc/standard-error';
+
+createErrors([
+	{
+		name: 'HttpError',
+		message: 'Request failed with status code ``statusCode``',
+		properties: [ 'statusCode' ]
+	},
+	{
+		name: 'ValidationError',
+		message: 'Request failed validation'
+	}
 ]);
 ```
 
-Return/throw/reject with StandardError objects during execution:
+Throw with StandardError Errors during execution:
 
 ```js
-// MyService.js
+import { HttpError } from '@unplgtc/standard-error';
 
-function returnOhNo(ohNo) {
-	if (ohNo) {
-		return StandardError.MyService_400();
-	}
-}
-
-function rejectOhNo(ohNo) {
-	if (ohNo) {
-		return Promise.reject(StandardError.MyService_400());
-	}
-}
-
-function throwOhNo(ohNo) {
-	if (ohNo) {
-		throw new Error(StandardError.MyService_400());
-	}
-}
+throw new HttpError(500);
 ```
 
-Return a StandardError with runtime details:
+All StandardErrors support the inclusion of runtime details as the final argument to a newly instantiated Error:
 
 ```js
-function returnOhNoWithStack(ohNo) {
-  if (ohNo) {
-    return StandardError.MyService_400({ohNo: ohNo});
-  }
-}
+import { HttpError } from '@unplgtc/standard-error';
+
+throw new HttpError(500, { route: '/authenticate' });
 ```
 
-Output:
+## Anatomy of a StandardError Error
+
+StandardError Errors accept `name`, `message`, `properties`, and `extraProps` parameters. `name` and `message` are required, but `properties` and `extraProps` are optional. On a StandardError object, you'll always be able to access `.name` and `.message`. You'll also be able to access all properties that were passed in via the `properties` array. These properties should be passed as arguments to any newly instantiated instance of a StandardError.
+
+`extraProps` are matches against the values of properties on each newly instantiated StandardError. Using the built-in `HttpError` as an example, the `extraProps` argument matches against the `statusCode` property. Any time an `HttpError` is created with a `statusCode` of `400`, the extra properties `title` and `details` will be automatically added to the resulting Error object.
 
 ```js
-{
-  code: 'MyService_400',
-  domain: 'MyService',
-  title: 'Bad Request',
-  message: 'Conise yet descriptive message explaining what probably went wrong if this error was emitted',
-  details: { ohNo: true }
+import { HttpError } from '@unplgtc/standard-error';
+
+try {
+	throw new HttpError(400, { runtimeDetail: 'some_detail' });
+
+} catch (err) {
+	console.log(err.message); // Request failed with status code 400 (Bad Request)
+	console.log(err.name); // HttpError
+	console.log(err.statusCode); // 400
+	console.log(err.title); // Bad Request
+	console.log(err.details); // The server cannot or will not process the request
+	console.dir(err.info); // { runtimeDetail: 'some_detail' }
+	console.log(err.stack); // [a stacktrace from the thrown error]
+	console.log(err instanceof Error) // true
+	console.log(err instanceof StandardError) // true
+	console.log(err instanceof HttpError) // true
 }
 ```
 
-StandardError works well with Unapologetic's [CBLogger package](https://github.com/unplgtc/cblogger) for improved error logging:
+## Removing values from the StandardError object
+
+If you need to remove the built-in HttpError object in order to create your own custom version, you can do so using the `removeError()` function:
 
 ```js
-import CBLogger from '@unplgtc/cblogger';
-import StandardError from '@unplgtc/standard-error';
+import { removeError } from '@unplgtc/standard-error';
 
-function logOhNos() {
-	var ohNo = returnOhNo(true);
-	if (ohNo === StandardError.MyService_400()) {
-		CBLogger.error('oh_no', {message: 'Another oh no occurred!'}, {stack: true}, StandardError.MyService_400());
-	}
-}
-```
-
-The above example would log something like the following:
-
-```
-ERROR: ** oh_no
-{ message: 'Another oh no occurred!' }
-** { code: 'MyService_400',
-  domain: 'MyService',
-  title: 'Bad Request',
-  message: 'Conise yet descriptive message explaining what probably went wrong if this error was emitted' }
--> MyService.js L11 at 2018-10-08 03:50:35.417Z (1538970635417)
-   at logOhNos (/Users/path/to/file/src/MyService.js:11:12)
-    at Object.<anonymous> (/Users/path/to/file/src/MyService.js:21:1)
-    at Module._compile (module.js:643:30)
-    at Object.Module._extensions..js (module.js:654:10)
-    at Module.load (module.js:556:32)
-    at tryModuleLoad (module.js:499:12)
-    at Function.Module._load (module.js:491:3)
-```
-
-## Accessing and removing values on the StandardError object
-
-List all errors:
-
-```js
-StandardError.list();
-```
-
-Output:
-
-```js
-{ 'http_200':
-   { code: 200,
-     domain: 'http',
-     title: 'OK',
-     message: 'Request successful' },
-  'http_201':
-   { code: 201,
-     domain: 'http',
-     title: 'Created',
-     message: 'Request successful, resource created' },
-  'http_202':
-   { code: 202,
-     domain: 'http',
-     title: 'Accepted',
-     message: 'The request has been accepted for processing' },
-  [...],
-  MyService_400:
-   { code: 'MyService_400',
-     domain: 'MyService',
-     title: 'Bad Request',
-     message: 'Conise yet descriptive message explaining what probably went wrong if this error was emitted' },
-  MyOtherService_401:
-   { code: 'MyOtherService_401',
-     domain: 'MyOtherService',
-     title: 'Unauthorized',
-     message: 'Unauthorized request passed to MyOtherService' },
-  MyOtherService_503:
-   { code: 'MyOtherService_503',
-     domain: 'MyOtherService',
-     title: 'Service Unavailable',
-     message: 'Attempted to contact upstream service but it was unavailable' } }
-```
-
-List all errors by domain:
-
-```js
-StandardError.list('MyService');
-```
-
-Output:
-
-```js
-{ MyService_400:
-   { code: 'MyService_400',
-     domain: 'MyService',
-     title: 'Bad Request',
-     message: 'Conise yet descriptive message explaining what probably went wrong if this error was emitted' } }
-```
-
-Note that the `.list()` output does actually return an Object rather than an array. If you're looking for arrays, use the `listKeys()` method for an array of keys or the `listErrors()` method for an array of error Objects.
-
-List all error keys:
-
-```js
-StandardError.listKeys();
-```
-
-Output:
-
-```js
-[ 'http_200',
-  'http_201',
-  'http_202',
-  [...],
-  'MyService_400',
-  'MyOtherService_401',
-  'MyOtherService_503' ]
-```
-
-List error keys by domain:
-
-```js
-StandardError.listKeys('MyOtherService');
-```
-
-Output:
-
-```js
-[ 'MyOtherService_401',
-  'MyOtherService_503' ]
-```
-
-List all error objects:
-
-```js
-StandardError.listErrors();
-```
-
-Output
-
-```js
-[ { code: 'http_200',
-    domain: 'http',
-    title: 'OK',
-    message: 'Request successful' },
-  { code: 'http_201',
-    domain: 'http',
-    title: 'Created',
-    message: 'Request successful, resource created' },
-  { code: 'http_202',
-    domain: 'http',
-    title: 'Accepted',
-    message: 'The request has been accepted for processing' },
-  [...],
-  { code: 'MyService_400',
-    domain: 'MyService',
-    title: 'Bad Request',
-    message: 'Conise yet descriptive message explaining what probably went wrong if this error was emitted' },
-  { code: 'MyOtherService_401',
-    domain: 'MyOtherService',
-    title: 'Unauthorized',
-    message: 'Unauthorized request passed to MyOtherService' },
-  { code: 'MyOtherService_503',
-    domain: 'MyOtherService',
-    title: 'Service Unavailable',
-    message: 'Attempted to contact upstream service but it was unavailable' } ]
-```
-
-List error objects by domain:
-
-```js
-StandardError.listErrors('MyOtherService');
-```
-
-Output:
-
-```js
-[ { code: 'MyOtherService_401',
-    domain: 'MyOtherService',
-    title: 'Unauthorized',
-    message: 'Unauthorized request passed to MyOtherService' },
-  { code: 'MyOtherService_503',
-    domain: 'MyOtherService',
-    title: 'Service Unavailable',
-    message: 'Attempted to contact upstream service but it was unavailable' } ]
-```
-
-Remove errors from StandardError object:
-
-```js
-// Remove single error
-StandardError.remove('MyService_400');
-
-// Remove list of errors
-StandardError.remove(['MyOtherService_401', 'MyOtherService_503']);
-```
-
-Remove full domain of errors from StandardError object:
-
-```js
-StandardError.removeByDomain('http');
+removeError('HttpError');
 ```
