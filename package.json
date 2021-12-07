@@ -1,6 +1,6 @@
 {
   "name": "@unplgtc/standard-error",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "A simple package for easily extending the JavaScript Error class to provide custom Errors tailored to your project.",
   "type": "module",
   "exports": "./src/StandardError.js",
