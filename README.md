@@ -91,6 +91,29 @@ try {
 }
 ```
 
+You can add a "*" key to `extraProps` to define any properties that should exist on _all instances_ of your StandardError Errors. This can be useful to add some domain-specific details to an otherwise generic-seeming Error name, such as specifying the service that the Error was created for.
+
+```js
+import { createError } from '@unplgtc/standard-error';
+
+const ValidationError = createError({
+	name: 'ValidationError',
+	message: 'Request failed validation in ``service``'
+	extraProps: {
+		'*': { service: 'apiService' }
+	}
+});
+
+try {
+	throw new ValidationError();
+
+} catch (err) {
+	console.log(err.message); // Request failed validation in apiService
+	console.log(err.name); // ValidationError
+	console.log(err.service); // apiService
+}
+```
+
 ## Removing values from the StandardError object
 
 If you need to remove the built-in HttpError object in order to create your own custom version, you can do so using the `removeError()` function:

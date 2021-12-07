@@ -29,7 +29,7 @@ function createError({ name, message, properties, extraProps }) {
 	return Errors[name] = extendStandardError({ name, message, properties, extraProps });
 }
 
-function extendStandardError({ name, message, properties, extraProps }) {
+function extendStandardError({ name, message, properties = [], extraProps }) {
 	return (class extends StandardError {
 		constructor(...args) {
 			// If more args passed than props, assume final arg is the `info` prop
@@ -43,6 +43,10 @@ function extendStandardError({ name, message, properties, extraProps }) {
 				if (matchedProps = extraProps?.[properties[i]]?.[args[i]]) {
 					Object.assign(this, matchedProps);
 				}
+			}
+
+			if (extraProps?.['*']) {
+				Object.assign(this, extraProps['*']);
 			}
 
 			this.message = message.split('``')

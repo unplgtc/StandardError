@@ -88,3 +88,62 @@ test('Can create multiple StandardError Errors at once', async() => {
 	removeError('TestError');
 	removeError('OtherTestError');
 });
+
+test('Can create and throw a StandardError without properties', async() => {
+	// Setup
+	const TestError = createError({
+		name: 'TestError',
+		message: 'Testing'
+	});
+
+	// Execute
+	let err;
+	try {
+		throw new TestError('testInfo');
+
+	} catch (e) {
+		err = e;
+	}
+
+	// Test
+	expect(err.name).toEqual('TestError');
+	expect(err.message).toEqual('Testing');
+	expect(err.stack).not.toBe(undefined);
+	expect(err.info).toEqual('testInfo');
+	expect(err instanceof Error).toBe(true);
+	expect(err instanceof StandardError).toBe(true);
+	expect(err instanceof TestError).toBe(true);
+
+	// Cleanup
+	removeError('TestError');
+});
+
+test('The "*" key on extraProps places the props on all instances', async() => {
+	// Setup
+	const TestError = createError({
+		name: 'TestError',
+		message: 'Testing ``testProp``',
+		extraProps: { '*':  { testProp: 'star' }}
+	});
+
+	// Execute
+	let err;
+	try {
+		throw new TestError('testInfo');
+
+	} catch (e) {
+		err = e;
+	}
+
+	// Test
+	expect(err.name).toEqual('TestError');
+	expect(err.message).toEqual('Testing star');
+	expect(err.testProp).toEqual('star');
+	expect(err.info).toEqual('testInfo');
+	expect(err instanceof Error).toBe(true);
+	expect(err instanceof StandardError).toBe(true);
+	expect(err instanceof TestError).toBe(true);
+
+	// Cleanup
+	removeError('TestError');
+});
