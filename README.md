@@ -91,6 +91,8 @@ If you create a StandardError with the same name _and_ namespace as an existing 
 
 If you do not pass a namespace to a `createError` call, the error will be created in the 'Default' namespace. Adding errors with non-unique names to the Default namespace is not supported, and will result in an AlreadyExistsError being thrown.
 
+If you want to create StandardErrors _without_ adding the errors to the main Object (useful for private errors in packages which may want to use common error names without taking those spots for any projects that may import them), just pass `namespaceOnly: true` to your `createError` call.
+
 ## Anatomy of a StandardError Error
 
 StandardError Errors accept `name`, `message`, `properties`, and `extraProps` parameters. `name` and `message` are required, but `properties` and `extraProps` are optional. On a StandardError object, you'll always be able to access `.name` and `.message`. You'll also be able to access all properties that were passed in via the `properties` array. These properties should be passed as arguments to any newly instantiated instance of a StandardError.

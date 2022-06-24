@@ -17,7 +17,7 @@ function createErrors(errors) {
 	return errors.map(error => createError(error))
 }
 
-function createError({ name, message, properties, extraProps, logLevel, namespace = 'Default' }) {
+function createError({ name, message, properties, extraProps, logLevel, namespaceOnly, namespace = 'Default' }) {
 	if (!Errors[namespace]) {
 		Errors[namespace] = {};
 	}
@@ -37,7 +37,7 @@ function createError({ name, message, properties, extraProps, logLevel, namespac
 		return Errors[namespace][name];
 
 	} else if (Errors[name]) {
-		if (logLevel !== 'info') {
+		if (!namespaceOnly && logLevel !== 'info') {
 			console.log('WARN ** Error with given name already exists in a different namespace. To access this new error, please use a namespaced call. Pass `logLevel: "info"` to silence this warning.', { name, namespace, existingErrorNamespace: Errors[name].namespace });
 		}
 
@@ -47,7 +47,9 @@ function createError({ name, message, properties, extraProps, logLevel, namespac
 		const error = extendStandardError({ name, namespace, message, properties, extraProps });
 
 		Errors[namespace][name] = error;
-		return Errors[name] = error;
+		!namespaceOnly && (Errors[name] = error);
+
+		return error;
 	}
 }
 
@@ -80,7 +82,7 @@ function extendStandardError({ name, namespace, message, properties = [], extraP
 	});
 }
 
-function removeError(name, namespace = 'Default') {
+function removeError({ name, namespaceOnly, namespace = 'Default' }) {
 	if (name === 'StandardError') {
 		throw new StandardError(
 			'CannotRemoveStandardErrorError',
@@ -89,7 +91,7 @@ function removeError(name, namespace = 'Default') {
 		);
 	}
 
-	delete Errors[name];
+	!namespaceOnly && delete Errors[name];
 	delete Errors[namespace]?.[name];
 }
 
