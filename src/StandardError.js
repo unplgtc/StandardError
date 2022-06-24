@@ -17,19 +17,41 @@ function createErrors(errors) {
 	return errors.map(error => createError(error))
 }
 
-function createError({ name, message, properties, extraProps }) {
-	if (Errors[name]) {
-		throw new StandardError(
-			'AlreadyExistsError',
-			{ name },
-			`A StandardError with name '${name}' already exists`
-		);
+function createError({ name, message, properties, extraProps, logLevel, namespace = 'Default' }) {
+	if (!Errors[namespace]) {
+		Errors[namespace] = {};
 	}
 
-	return Errors[name] = extendStandardError({ name, message, properties, extraProps });
+	if (Errors[namespace][name]) {
+		if (namespace === 'Default') {
+			throw new StandardError(
+				'AlreadyExistsError',
+				{ name },
+				`A StandardError with name '${name}' already exists in the Default namespace. Add a namespace to error definition or give error a unique name.`
+			);
+
+		} else if (logLevel !== 'info') {
+			console.log('WARN ** Error with given name and namespace already exists. Returing existing version rather than overwriting it. Pass `logLevel: "info"` to silence this warning.', { name, namespace });
+		}
+
+		return Errors[namespace][name];
+
+	} else if (Errors[name]) {
+		if (logLevel !== 'info') {
+			console.log('WARN ** Error with given name already exists in a different namespace. To access this new error, please use a namespaced call. Pass `logLevel: "info"` to silence this warning.', { name, namespace, existingErrorNamespace: Errors[name].namespace });
+		}
+
+		return Errors[namespace][name] = extendStandardError({ name, namespace, message, properties, extraProps });
+
+	} else {
+		const error = extendStandardError({ name, namespace, message, properties, extraProps });
+
+		Errors[namespace][name] = error;
+		return Errors[name] = error;
+	}
 }
 
-function extendStandardError({ name, message, properties = [], extraProps }) {
+function extendStandardError({ name, namespace, message, properties = [], extraProps }) {
 	return (class extends StandardError {
 		constructor(...args) {
 			// If more args passed than props, assume final arg is the `info` prop
@@ -52,11 +74,13 @@ function extendStandardError({ name, message, properties = [], extraProps }) {
 			this.message = message.split('``')
 				.map(it => this[it] ? (this[it]) : it)
 				.join('');
+
+			namespace !== 'Default' && (this.namespace = namespace);
 		}
 	});
 }
 
-function removeError(name) {
+function removeError(name, namespace = 'Default') {
 	if (name === 'StandardError') {
 		throw new StandardError(
 			'CannotRemoveStandardErrorError',
@@ -66,6 +90,7 @@ function removeError(name) {
 	}
 
 	delete Errors[name];
+	delete Errors[namespace]?.[name];
 }
 
 // Register default error keys internally
