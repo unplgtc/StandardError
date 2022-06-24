@@ -65,6 +65,32 @@ import { HttpError } from '@unplgtc/standard-error';
 throw new HttpError(500, { route: '/authenticate' });
 ```
 
+## Namespacing Errors
+StandardError supports adding errors by namespace, which can help handle the complexities of implementing StandardError across interconnected packages.
+
+```js
+// Startup.js
+import { createError } from '@unplgtc/standard-error';
+
+createError({
+	name: 'HttpError',
+	namespace: 'HttpRequest',
+	message: 'Request failed with status code ``statusCode`` (``title``)',
+	properties: [ 'statusCode' ]
+});
+
+// Service.js
+import { HttpRequest } from '@unplgtc/standard-error';
+
+throw new HttpRequest.HttpError(500);
+```
+
+Namespaced errors are still added to the main StandardError object if no other error exists with the given namespace and name. This allows you to add namespaces without increasing the complexity of using StandardError. Adding namespaces is good practice; in the case that you import another package which used the same error name in a different namespace, StandardError will give you a warning when the non-uniquely named error is added. You can disable this warning by passing `logLevel: info` to your `createError` call.
+
+If you create a StandardError with the same name _and_ namespace as an existing error, StandardError will return the existing error rather than overwriting it. This prevents issues with importing different versions of the same package, which would otherwise result in duplicate errors being created. That said, StandardError will log a warning any time this occurs to help prevent unknown discrepancies if your StandardErrors have been updated in different package versions. If this warning is not useful to you, just pass `logLevel: 'info'` to your `createError` call to silence it.
+
+If you do not pass a namespace to a `createError` call, the error will be created in the 'Default' namespace. Adding errors with non-unique names to the Default namespace is not supported, and will result in an AlreadyExistsError being thrown.
+
 ## Anatomy of a StandardError Error
 
 StandardError Errors accept `name`, `message`, `properties`, and `extraProps` parameters. `name` and `message` are required, but `properties` and `extraProps` are optional. On a StandardError object, you'll always be able to access `.name` and `.message`. You'll also be able to access all properties that were passed in via the `properties` array. These properties should be passed as arguments to any newly instantiated instance of a StandardError.
@@ -80,6 +106,7 @@ try {
 } catch (err) {
 	console.log(err.message); // Request failed with status code 400 (Bad Request)
 	console.log(err.name); // HttpError
+	console.log(err.namespace); // Default
 	console.log(err.statusCode); // 400
 	console.log(err.title); // Bad Request
 	console.log(err.details); // The server cannot or will not process the request
