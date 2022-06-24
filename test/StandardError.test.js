@@ -37,7 +37,7 @@ test('Can create and throw a new StandardError Error', async() => {
 	expect(err instanceof TestError).toBe(true);
 
 	// Cleanup
-	removeError('TestError');
+	removeError({ name: 'TestError' });
 });
 
 test('Can create multiple StandardError Errors at once', async() => {
@@ -85,8 +85,8 @@ test('Can create multiple StandardError Errors at once', async() => {
 	expect(otherErr instanceof OtherTestError).toBe(true);
 
 	// Cleanup
-	removeError('TestError');
-	removeError('OtherTestError');
+	removeError({ name: 'TestError' });
+	removeError({ name: 'OtherTestError' });
 });
 
 test('Can create and throw a StandardError without properties', async() => {
@@ -115,7 +115,7 @@ test('Can create and throw a StandardError without properties', async() => {
 	expect(err instanceof TestError).toBe(true);
 
 	// Cleanup
-	removeError('TestError');
+	removeError({ name: 'TestError' });
 });
 
 test('The "*" key on extraProps places the props on all instances', async() => {
@@ -145,7 +145,7 @@ test('The "*" key on extraProps places the props on all instances', async() => {
 	expect(err instanceof TestError).toBe(true);
 
 	// Cleanup
-	removeError('TestError');
+	removeError({ name: 'TestError' });
 });
 
 test('Can create and throw namespaced StandardErrors', async() => {
@@ -203,8 +203,8 @@ test('Can create and throw namespaced StandardErrors', async() => {
 	expect(err2 instanceof Test2Error).toBe(true);
 
 	// Cleanup
-	removeError('TestError', 'Test1');
-	removeError('TestError', 'Test2');
+	removeError({ name: 'TestError', namespace: 'Test1' });
+	removeError({ name: 'TestError', namespace: 'Test2' });
 });
 
 test('Creating duplicate StandardErrors in the same namespace works but does not overwrite the first instance', async() => {
@@ -227,5 +227,33 @@ test('Creating duplicate StandardErrors in the same namespace works but does not
 	expect(Test1Error).toBe(AlsoTest1Error);
 
 	// Cleanup
-	removeError('TestError', 'Test1');
+	removeError({ name: 'TestError', namespace: 'Test1' });
+});
+
+test('Can create StandardErrors in a namespace without adding them to main Error object', async() => {
+	// Setup
+	const [ TestError, NamespaceOnlyTestError ] = createErrors([
+		{
+			name: 'TestError',
+			namespace: 'Test1',
+			message: 'Testing'
+		},
+		{
+			name: 'NamespaceOnlyTestError',
+			namespace: 'Test1',
+			namespaceOnly: true,
+			message: 'Testing'
+		}
+	]);
+
+	// Test
+	expect(Errors.TestError).toBe(TestError);
+	expect(Errors.Test1.TestError).toBe(TestError);
+
+	expect(Errors.NamespaceOnlyTestError).toBe(undefined);
+	expect(Errors.Test1.NamespaceOnlyTestError).toBe(NamespaceOnlyTestError);
+
+	// Cleanup
+	removeError({ name: 'TestError', namespace: 'Test1'});
+	removeError({ name: 'NamespaceOnlyTestError', namespace: 'Test1', namespaceOnly: true });
 });
